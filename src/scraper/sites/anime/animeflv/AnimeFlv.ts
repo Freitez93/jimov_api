@@ -16,7 +16,7 @@ import {
 } from "../../../../types/search";
 
 export class AnimeFlv {
-  readonly url = "https://animeflv.ws";
+  readonly url = "https://animeflv.net";
 
   async GetAnimeInfo(anime: string): Promise<Anime> {
     try {
