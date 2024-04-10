@@ -52,10 +52,10 @@ export class AnimeFlv {
       });
       //get episodes
       episodes.each((_i_, e) => {
-        const l = $(e).attr("href");
+        const l = $(e).attr("href").replace("/ver/", "");
         const episode = new Episode();
         episode.name = $(e).children("h3.Title").text().trim();
-        episode.url = `${l}`;
+        episode.url = `/ver/${l}`;
         episode.number = $(e).children("p").last().text().trim();
         episode.image = $(e).children("figure").find(".lazy").attr("data-src");
         AnimeReturn.episodes.push(episode);
@@ -124,18 +124,18 @@ export class AnimeFlv {
       const { data } = await axios.get(`${this.url}/${episode}`);
       const $ = load(data);
       const title = $(".CapiTop").children("h1").text().trim();
-      const getLinks = $(".CpCnA .anime_muti_link li");
+      const getLinks = data.match(/var videos = ({.+?);/)?.[1];
       const numberEpisode =  episode.substring(episode.lastIndexOf("-") + 1)
       const episodeReturn = new Episode();
       episodeReturn.name = title;
-      episodeReturn.url = `/anime/flv/episode/${episode}`;
+      episodeReturn.url = `/ver/${episode}`;
       episodeReturn.number = numberEpisode as unknown as string;
       episodeReturn.servers = [];
 
-      const promises = getLinks.map(async(_i, e) => {
+      const promises = JSON.stringify(getLinks).SUB.map(async(_i, e) => {
         const servers = new EpisodeServer();
-        const title = $(e).attr("title");
-        const videoData = $(e).attr("data-video");
+        const title = e.title;
+        const videoData = e.url;
         servers.name = title;
         servers.url = videoData;
         if(videoData.includes("streaming.php")){
