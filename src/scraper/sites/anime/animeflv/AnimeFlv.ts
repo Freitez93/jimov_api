@@ -22,9 +22,9 @@ export class AnimeFlv {
     try {
       const { data } = await axios.get(`${this.url}/anime/${anime}`);
       const $ = load(data);
-      const title = $("h2.Title").text().trim();
+      const title = $("h1.Title").text().trim();
       const title_alt = $("span.TxtAlt").text().trim();
-      const img = $("div.AnimeCover .Image figure img").attr("src");
+      const img = `${this.url + $("div.AnimeCover .Image figure img").attr("src")}`;
       const status = $("p.AnmStts span").text().trim();
       const synopsis = $("div.Description").text().trim();
       const episodes = $(".ListCaps li a");
@@ -42,7 +42,7 @@ export class AnimeFlv {
       $("ul.ListAnmRel li a").each((_i, e) => {
         const cro = new Chronology();
         cro.name = $(e).text().trim();
-        cro.url = `/anime/flv/name/${$(e).attr("href").replace("/anime/", "")}`;
+        cro.url = `/anime/${$(e).attr("href")}`;
         AnimeReturn.chronology.push(cro);
       });
       //get genres
@@ -52,10 +52,10 @@ export class AnimeFlv {
       });
       //get episodes
       episodes.each((_i_, e) => {
-        const l = $(e).attr("href").replace("/", "");
+        const l = $(e).attr("href");
         const episode = new Episode();
-        episode.name = $(e).children(".Title").text().trim();
-        episode.url = `/ver/${`${l}`.replace("/anime", "/anime/flv")}`;
+        episode.name = $(e).children("h3.Title").text().trim();
+        episode.url = `${l}`;
         episode.number = $(e).children("p").last().text().trim();
         episode.image = $(e).children("figure").find(".lazy").attr("data-src");
         AnimeReturn.episodes.push(episode);
