@@ -1,5 +1,5 @@
 import {AnimeFlv} from '../scraper/sites/anime/animeflv/AnimeFlv';
-import { StatusAnimeflv, Genres } from '../scraper/sites/anime/animeflv/animeflv_helper';
+import { StatusAnimeflv, Genres, OrderAnimeflv } from '../scraper/sites/anime/animeflv/animeflv_helper';
 describe('AnimeFlv', () => {
     let animeFlv: AnimeFlv;
   
@@ -20,7 +20,7 @@ describe('AnimeFlv', () => {
     });
   
     it('should filter anime successfully', async () => {
-      const result = await animeFlv.Filter(Genres.Action, 'all', 'all', StatusAnimeflv.OnGoing, 1, 1);
+      const result = await animeFlv.Filter(Genres.Action, undefined, undefined, undefined, OrderAnimeflv.default, 1);
       expect(result.results.length).toBeGreaterThan(0);
     });
   });

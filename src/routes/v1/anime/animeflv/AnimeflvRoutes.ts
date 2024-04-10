@@ -40,9 +40,9 @@ r.get("/anime/flv/filter", async (req, res) => {
   try {
     const gen = req.query.gen as Genres;
     const date = req.query.date as string;
-    const type = req.query.type as TypeAnimeflv;
-    const status = req.query.status as StatusAnimeflv;
-    const ord = req.query.ord as OrderAnimeflv;
+    const type = req.query.type as unknown as TypeAnimeflv;
+    const status = req.query.status as unknown as StatusAnimeflv;
+    const ord = req.query.ord as unknown as OrderAnimeflv;
     const page = req.query.page as unknown as number;
     const title = req.query.title as string;
 

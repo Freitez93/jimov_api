@@ -42,11 +42,19 @@ export enum Genres {
     Yuri = "Yuri",
   }
 
-  export enum StatusAnimeflv {
-    OnGoing = "En emision",
-    Finished = "Finalizado",
-    Upcoming = "Próximamente",
-  }
+  export enum OrderAnimeflv {
+    default = "default",
+    updated = "updated",
+    added = "added",
+    title = "title",
+    rating = "rating"
+  };
 
-export type TypeAnimeflv = "all" | 1 | 2 | 3 | 4;
-export type OrderAnimeflv = "all" | 1 | 2 | 3 | 4 | 5;
+  export enum TypeAnimeflv {
+    tv = "tv",
+    movie = "movie",
+    special = "special",
+    ova = "ova"
+  };
+
+export type StatusAnimeflv = 1 | 2 | 3;
