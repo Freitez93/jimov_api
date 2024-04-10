@@ -121,7 +121,7 @@ export class AnimeFlv {
 
   async GetEpisodeServers(episode: string): Promise<Episode> {
     try {
-      const { data } = await axios.get(`${this.url}/${episode}`);
+      const { data } = await axios.get(`${this.url}/ver/${episode}`);
       const $ = load(data);
       const title = $(".CapiTop").children("h1").text().trim();
       const getLinks = data.match(/var videos = ({.+?);/)?.[1];
