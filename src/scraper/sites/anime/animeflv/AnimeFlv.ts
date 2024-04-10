@@ -55,12 +55,9 @@ export class AnimeFlv {
         const l = $(e).attr("href").replace("/", "");
         const episode = new Episode();
         episode.name = $(e).children(".Title").text().trim();
-        episode.url = `/anime/flv/episode/${`${l}`.replace(
-          "/anime",
-          "/anime/flv"
-        )}`;
+        episode.url = `/ver/${`${l}`.replace("/anime", "/anime/flv")}`;
         episode.number = $(e).children("p").last().text().trim();
-        episode.image = $(e).children("figure").find(".lazy").attr("src");
+        episode.image = $(e).children("figure").find(".lazy").attr("data-src");
         AnimeReturn.episodes.push(episode);
       });
       return AnimeReturn;
