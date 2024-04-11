@@ -118,52 +118,54 @@ export class AnimeFlv {
 			const { data } = await axios.get(`${this.url}/ver/${episode}`);
 			const $ = load(data);
 			const title = $(".CapiTop").children("h1").text().trim();
-			const getLinks = data.match(/var videos = ({.+?);/)?.[1];
+			const getLinks = JSON.parse(data.match(/var videos = ({.+?);/)?.[1]);
 			const numberEpisode = episode.substring(episode.lastIndexOf("-") + 1)
 			const episodeReturn = new Episode();
 			episodeReturn.name = title;
-			episodeReturn.url = `/ver/${episode}`;
+			episodeReturn.url = `/anime/flv/episode/${episode}`;
 			episodeReturn.number = numberEpisode as unknown as string;
 			episodeReturn.servers = [];
 
-			const promises = JSON.parse(getLinks).SUB.map(async _i => {
-				const servers = new EpisodeServer();
-				const title = _i.title;
-				const videoData = _i.code;
-				servers.name = title;
-				servers.url = videoData;
-
-				if (videoData.includes("streaming.php")) {
-					await this.getM3U(`${videoData.replace("streaming.php", "ajax.php")}&refer=none`).then((g) => {
-						if (g.source.length) {
-							servers.file_url = g.source[0].file;
-						}
-					});
-				}
-				switch (title) {
-					case "Mega":
-						servers.file_url = videoData
-							.replace("embed#!", "file/")
-							.replace("!", "#");
-						break;
-					case "Streamtape":
-						servers.file_url = videoData.replace("/e/", "/v/");
-						break;
-					case "YourUpload":
-						servers.file_url = videoData.replace("/embed/", "/watch/");
-						break;
-					case "Vidlox":
-					case "Doodstream":
-					case "Streamsb":
-					case "Filemoon":
-						servers.file_url = videoData.replace("/e/", "/d/");
-						break;
-					default:
-						break;
-				}
-				episodeReturn.servers.push(servers);
-			});
-			await Promise.all(promises);
+			for (var index in getLinks) {
+				const audio = index.replace("SUB", "Subtitulado").replace("LAT", "Latino")
+				const promises = getLinks[index].map(async _i => {
+					const servers = new EpisodeServer();
+					servers.audio = audio;
+					servers.name = _i.title;
+					servers.url = _i.code;
+					if (_i.code.includes("streaming.php")) {
+						await this.getM3U(`${_i.code.replace("streaming.php", "ajax.php")}&refer=none`).then((g) => {
+							if (g.source.length) {
+								servers.file_url = g.source[0].file;
+							}
+						});
+					}
+					switch (_i.title.toLocaleLowerCase()) {
+						case "okru":
+							servers.file_url = _i.code.replace("embed", "")
+							break
+						case "mega":
+							servers.file_url = _i.code.replace("embed#!", "file/").replace("!", "#");
+							break;
+						case "streamtape":
+							servers.file_url = _i.code.replace("/e/", "/v/");
+							break;
+						case "yourupload":
+							servers.file_url = _i.code.replace("/embed/", "/watch/");
+							break;
+						case "vidlox":
+						case "doodstream":
+						case "dtreamsb":
+						case "filemoon":
+						case "sw":
+							servers.file_url = _i.code.replace("/e/", "/d/");
+							break;
+						default:
+					}
+					episodeReturn.servers.push(servers);
+				});
+				await Promise.all(promises);
+			}
 			return episodeReturn;
 		} catch (error) {
 			console.log("An error occurred while getting the episode servers", error);
