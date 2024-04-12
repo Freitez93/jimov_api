@@ -58,6 +58,8 @@ export class EpisodeServer implements IEpisodeServer {
   file_url?: string;
   /** @inheritdoc */
 	audio?: string;
+    /** @inheritdoc */
+	tracks?: any;
 
   constructor(name?: string, url?: string) {
     this.name = name;
