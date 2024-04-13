@@ -32,10 +32,13 @@ r.get("/anime/zoro/name/:name", async (req, res) => {
 //episode servers
 r.get("/anime/zoro/episode/:episode", async (req, res) => {
 	try {
+		const zoro = new Zoro();
 		const episode = req.params.episode
 		const episodeId = req.query.ep as string
-		const zoro = new Zoro();
-		const animeInfo = await zoro.GetEpisodeServer(episode, episodeId);
+		const server = req.query.server as string | "HD-1"
+		const category = req.query.category as string | "sub"
+
+		const animeInfo = await zoro.GetEpisodeServer(episode, episodeId, category, server);
 		res.send(animeInfo);
 	} catch (error) {
 		console.log(error);

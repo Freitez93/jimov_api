@@ -125,7 +125,12 @@ export class Zoro {
 	}
 
 	//episode server
-	async GetEpisodeServer(episode: string, episodeId: string) {
+	async GetEpisodeServer(
+		episode: string,
+		episodeId: string,
+		subOrDub: string,
+		server: string
+	) {
 		try {
 			const animename = episode.toLowerCase().replace(/\s/g, "-")
 			const { data } = await axios.get(
@@ -148,41 +153,35 @@ export class Zoro {
 				(_i, e) => {
 					const servers = new EpisodeServer();
 					const serverId = $(e).attr("data-id").trim();
-					const audio = $(e).attr("data-type").trim()
-					return this.getServers(serverId).then(
-						async (response) => {
-							const title = $(e).find("a").text().trim();
-							const videoData = response.link;
-							servers.name = title;
-							servers.url = videoData;
-							servers.audio = audio.replace("sub", "Subtitulado").replace("dub", "English");
-							switch (title) {
-								case "Streamtape":
-									servers.file_url = videoData.replace("/e/", "/v/");
-									break;
-								case "StreamSB":
-									servers.file_url = videoData.replace("/e/", "/d/");
-									break;
-								case "HD-1":
-								case "HD-2":
-									const embedId = videoData.match(/e-1.(.+)\?k=1/)?.[1]
-									const isFound = await this.rabbitStream(embedId)
+					const type = $(e).attr("data-type").trim()
+					const title = $(e).find("a").text().trim();
 
-									if (isFound) {
-										servers.file_url = videoData
-										servers.url = isFound.m3u8
-										servers.tracks = isFound.tracks
-									}
-									break;
-								default:
-									break;
-							}
-							epi.servers.push(servers);
-						}).catch(
-							(error) => {
+					if (subOrDub === type && title === server) {
+						return this.getServers(serverId).then(
+							async (response) => {
+								const videoData = response.link;
+								servers.category = type.replace("sub", "Subtitulado").replace("dub", "English");
+								switch (title) {
+									case "HD-1":
+									case "HD-2":
+										await this.rabbitStream(videoData).then(
+											(response: any) => {
+												servers.name = title.replace("HD-1", "MegaCloud.tv");
+												servers.url = videoData
+												servers.sources = response.sources
+												servers.subtitles = response.subtitles
+											}
+										)
+										break;
+									default:
+										break;
+								}
+								epi.servers.push(servers);
+							}).catch(error => {
 								console.log("Error getting servers for episode", error);
 								throw new Error("Error getting servers for episode");
 							});
+					}
 				}).get();
 			await Promise.all(promises);
 			return epi;
@@ -199,37 +198,67 @@ export class Zoro {
 		return data;
 	}
 
-	private async rabbitStream(embed_id): Promise<any> {
-		const { data } = await axios.get(`https://megacloud.tv/embed-2/ajax/e-1/getSources?id=${embed_id}`, {
+	private async rabbitStream(_url: string): Promise<any> {
+		const page = new URL(_url)
+		const _id = page.pathname.split("/").pop()
+		const sourceUrl = [
+			`https://megacloud.tv/embed-2/ajax/e-1/getSources?id=${_id}`,
+			`https://rapid-cloud.co/ajax/embed-6-v2/getSources?id=${_id}`
+		].filter(source => source.includes(page.hostname))[0]
+		const playerUrl = [
+			"https://megacloud.tv/js/player/a/prod/e1-player.min.js?v=1699711377",
+			"https://rapid-cloud.co/js/player/prod/e6-player-v2.min.js"
+		].filter(source => source.includes(page.hostname))[0]
+
+		const { data } = await axios.get(sourceUrl, {
 			headers: {
 				"X-Requested-With": "XMLHttpRequest",
-				"Referer": `https://megacloud.tv/embed-2/e-1/${embed_id}?k=1`,
+				"Referer": _url,
 				"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36 Edg/119.0.0.0",
 			}
 		});
 
 		let m3u8 = data.sources[0]
 		if (data.encrypted) {
-			const key = await this.getKey(data.sources);
+			const key = await this.getKey(data.sources, playerUrl);
 			const decrypted = AES.decrypt(key[1], key[0]).toString(enc.Utf8)
+			console.log(decrypted)
 			m3u8 = decrypted.match(/https:\/\/.+m3u8/)[0]
 		}
 
+		const sources = []
+		if (m3u8.includes(".m3u8")) {
+			const { data } = await axios.get(m3u8);
+			const parse = data.match(/#EXT-X-STREAM.+\n.+m3u8/g)
+			for (const element of parse) {
+				sources.push({
+					url: m3u8.replace("master.m3u8", "") + element.match(/index-.+?m3u8/)[0],
+					isM3U8: true,
+					quality: element.match(/RESOLUTION=(.+?),/)[1].split("x")[1]
+				})
+			}
+			sources.push({ url: m3u8, isM3U8: m3u8.includes(".m3u8"), quality: "auto" })
+		}
+
 		return {
-			m3u8,
-			tracks: data.tracks,
+			sources,
+			subtitles: data.tracks.filter(
+				(item: any) => item.label
+			)
 		}
 	}
 
-	private async getKey(cipher): Promise<any> {
-		const { data } = await axios.get("https://megacloud.tv/js/player/a/prod/e1-player.min.js?v=1699711377")
-		const filt = data.match(/case 0x\d{1,2}:\w{1,2}=\w{1,2},\w{1,2}=\w{1,2}/g).map(element => {
-			return element.match(/=(\w{1,2})/g).map(element => {
-				return element.substring(1)
+	private async getKey(cipher: string, playerJS: string): Promise<any> {
+		const { data } = await axios.get(playerJS)
+		const filt = data.match(/case 0x\d{1,2}:\w{1,2}=\w{1,2},\w{1,2}=\w{1,2}/g).map(
+			(element: any) => {
+				return element.match(/=(\w{1,2})/g).map(
+					(element: any) => {
+						return element.substring(1)
+					})
 			})
-		})
 		const filt_area = data.match(/\w{1,2}=0x\w{1,2},\w{1,2}=0x\w{1,2},\w{1,2}=0x\w{1,2},\w{1,2}=0x\w{1,2},.+?;/)[0]
-		const objectFromVars = filt_area.split(",").reduce((acc, pair) => {
+		const objectFromVars = filt_area.split(",").reduce((acc: any, pair: any) => {
 			const [key, value] = pair.split("=");
 			acc[key] = parseInt(value);
 			return acc;
@@ -241,7 +270,7 @@ export class Zoro {
 			, CC = 0x0;
 
 		for (let CW = 0x0; CW < P; CW++) {
-			let CR, CJ;
+			let CR: any, CJ: any;
 			switch (CW) {
 				case 0x0:
 					CR = objectFromVars[filt[0][0]],

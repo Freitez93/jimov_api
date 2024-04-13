@@ -8,14 +8,14 @@
  * @author Zukaritasu 
  */
 export interface IEpisodeServer {
-  /** Name of the server where the episode is hosted */
-  name: string;
-  /** 
-   * The URL of the chapter. This URL leads to the video player of the
-   * server where the episode is hosted.  */
-  url: string;
-  /** Direct video file url for download */
-  file_url?: string;
+	/** Name of the server where the episode is hosted */
+	name: string;
+	/** 
+	 * The URL of the chapter. This URL leads to the video player of the
+	 * server where the episode is hosted.  */
+	url: string;
+	/** Direct video file url for download */
+	file_url?: string;
 }
 
 /**
@@ -26,20 +26,20 @@ export interface IEpisodeServer {
  * @author Zukaritasu
  */
 export interface IEpisode {
-  /** 
-   * Name of anime episode. May contain the chapter number concatenated
-   * with the anime name. */
-  name: string;
-  /** The episode URL in the API query */
-  url: `/anime/${string}/episode/${string | number}` | string;
-  /** The episode number. By default the value can be 0 in string or integer. */
-  number: number | string;
-  /** 
-   * List of available servers where the episode is located. Remember that
-   * this is not the download link of the episode but of the video player. */
-  servers?: IEpisodeServer[];
-  /** The image of the episode shown as thumbnail */
-  image: string;
+	/** 
+	 * Name of anime episode. May contain the chapter number concatenated
+	 * with the anime name. */
+	name: string;
+	/** The episode URL in the API query */
+	url: `/anime/${string}/episode/${string | number}` | string;
+	/** The episode number. By default the value can be 0 in string or integer. */
+	number: number | string;
+	/** 
+	 * List of available servers where the episode is located. Remember that
+	 * this is not the download link of the episode but of the video player. */
+	servers?: IEpisodeServer[];
+	/** The image of the episode shown as thumbnail */
+	image: string;
 }
 
 /**
@@ -50,21 +50,21 @@ export interface IEpisode {
  * @author Zukaritasu 
  */
 export class EpisodeServer implements IEpisodeServer {
-  /** @inheritdoc */
-  name: string;
-  /** @inheritdoc */
-  url: string;
-  /** @inheritdoc */
-  file_url?: string;
-  /** @inheritdoc */
-	audio?: string;
-    /** @inheritdoc */
-	tracks?: any;
+	/** @inheritdoc */
+	name: string;
+	/** @inheritdoc */
+	url: string;
+	/** @inheritdoc */
+	category?: string;
+	/** @inheritdoc */
+	sources?: object;
+	/** @inheritdoc */
+	subtitles?: object;
 
-  constructor(name?: string, url?: string) {
-    this.name = name;
-    this.url = url;
-  }
+	constructor(name?: string, url?: string) {
+		this.name = name;
+		this.url = url;
+	}
 }
 
 /**
@@ -75,14 +75,14 @@ export class EpisodeServer implements IEpisodeServer {
  * @author Zukaritasu
  */
 export class Episode implements IEpisode {
-  /** @inheritdoc */
-  name: string;
-  /** @inheritdoc */
-  url: `/anime/${string}/episode/${string | number}` | string;
-  /** @inheritdoc */
-  number: number | string;
-  /** @inheritdoc */
-  servers?: IEpisodeServer[] = [];
-  /** @inheritdoc */
-  image: string;
+	/** @inheritdoc */
+	name: string;
+	/** @inheritdoc */
+	url: `/anime/${string}/episode/${string | number}` | string;
+	/** @inheritdoc */
+	number: number | string;
+	/** @inheritdoc */
+	servers?: IEpisodeServer[] = [];
+	/** @inheritdoc */
+	image: string;
 }

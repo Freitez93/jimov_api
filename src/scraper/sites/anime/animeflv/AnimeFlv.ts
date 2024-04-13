@@ -130,35 +130,35 @@ export class AnimeFlv {
 				const audio = index.replace("SUB", "Subtitulado").replace("LAT", "Latino")
 				const promises = getLinks[index].map(async _i => {
 					const servers = new EpisodeServer();
-					servers.audio = audio;
+					servers.category = audio;
 					servers.name = _i.title;
 					servers.url = _i.code;
 					if (_i.code.includes("streaming.php")) {
 						await this.getM3U(`${_i.code.replace("streaming.php", "ajax.php")}&refer=none`).then((g) => {
 							if (g.source.length) {
-								servers.file_url = g.source[0].file;
+								servers.url = g.source[0].file;
 							}
 						});
 					}
 					switch (_i.title.toLocaleLowerCase()) {
 						case "okru":
-							servers.file_url = _i.code.replace("embed", "")
+							servers.url = _i.code.replace("embed", "")
 							break
 						case "mega":
-							servers.file_url = _i.code.replace("embed#!", "file/").replace("!", "#");
+							servers.url = _i.code.replace("embed#!", "file/").replace("!", "#");
 							break;
 						case "streamtape":
-							servers.file_url = _i.code.replace("/e/", "/v/");
+							servers.url = _i.code.replace("/e/", "/v/");
 							break;
 						case "yourupload":
-							servers.file_url = _i.code.replace("/embed/", "/watch/");
+							servers.url = _i.code.replace("/embed/", "/watch/");
 							break;
 						case "vidlox":
 						case "doodstream":
 						case "dtreamsb":
 						case "filemoon":
 						case "sw":
-							servers.file_url = _i.code.replace("/e/", "/d/");
+							servers.url = _i.code.replace("/e/", "/d/");
 							break;
 						default:
 					}
